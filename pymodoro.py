@@ -146,7 +146,14 @@ def print_output(description, duration_in_seconds, seconds, full_mark_character)
     minutes = get_minutes(seconds)
     output_seconds = get_output_seconds(seconds)
     progress_bar = print_progress_bar(duration_in_seconds, seconds, full_mark_character)
-    sys.stdout.write(description + " %s %02d:%02d\n" % (progress_bar, minutes, output_seconds))
+    output = description + " %s %02d:%02d" % (progress_bar, minutes, output_seconds)
+    sys.stdout.write(wrap(output)+"\n")
+
+def wrap(string, color = None):
+    if color is not None:
+        return "<fc=%s>%s</fc>" % (color, string)
+    else:
+        return string
 
 def get_minutes(seconds):
     return int(seconds / 60)
@@ -172,15 +179,19 @@ def print_break_output_hours(seconds):
     output_minutes = get_output_minutes(seconds)
     hours = get_hours(seconds)
     output_seconds = get_output_seconds(seconds)
-
+    if break_duration_in_seconds < seconds:
+        color = "red"
+    else:
+        color = None
     if minutes < 60:
-        sys.stdout.write("B %02d:%02d min\n" % (minutes, output_seconds))
+        output = "B %02d:%02d min" % (minutes, output_seconds)
     elif hours < 24:
-        sys.stdout.write("B %02d:%02d h\n" % (hours, output_minutes))
+        output = "B %02d:%02d h" % (hours, output_minutes)
     else:
         days = int(hours/24)
         output_hours = hours - days * 24
-        sys.stdout.write("B %02d d %02d h\n" % (days, output_hours))
+        output = "B %02d d %02d h" % (days, output_hours)
+    sys.stdout.write(wrap(output, color)+"\n")
 
 def get_hours(seconds):
     return int(seconds / 3600)

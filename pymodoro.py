@@ -70,7 +70,7 @@ def set_configuration_from_arguments(args):
             break_duration_in_seconds = args.break_duration * 60
     if args.update_interval_in_seconds:
         update_interval_in_seconds = args.update_interval_in_seconds
-    if args.total_number_of_marks:
+    if args.total_number_of_marks is not None:
         total_number_of_marks = args.total_number_of_marks
     if args.session_full_mark_character:
         session_full_mark_character = args.session_full_mark_character

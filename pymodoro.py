@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: latin-1 -*-
+# -*- coding: utf-8 -*-
 # authors: Dat Chu <dattanchu@gmail.com>
 #          Dominik Mayer <dominik.mayer@gmail.com>
 # Prerequisite
@@ -58,35 +58,35 @@ def set_configuration_from_arguments(args):
     global session_sound_file
     global break_sound_file
     global enable_sound
-    if args.session_duration:
+    if args.session_duration is not None:
         if args.durations_in_seconds == True:
             session_duration_in_seconds = args.session_duration
         else:
             session_duration_in_seconds = args.session_duration * 60
-    if args.break_duration:
+    if args.break_duration is not None:
         if args.durations_in_seconds == True:
             break_duration_in_seconds = args.break_duration
         else:
             break_duration_in_seconds = args.break_duration * 60
-    if args.update_interval_in_seconds:
+    if args.update_interval_in_seconds is not None:
         update_interval_in_seconds = args.update_interval_in_seconds
     if args.total_number_of_marks is not None:
         total_number_of_marks = args.total_number_of_marks
-    if args.session_full_mark_character:
+    if args.session_full_mark_character is not None:
         session_full_mark_character = args.session_full_mark_character
-    if args.break_full_mark_character:
+    if args.break_full_mark_character is not None:
         break_full_mark_character = args.break_full_mark_character
-    if args.empty_mark_character:
+    if args.empty_mark_character is not None:
         empty_mark_character = args.empty_mark_character
-    if args.session_file:
+    if args.session_file is not None:
         session_file = args.session_file
-    if args.session_sound_file:
+    if args.session_sound_file is not None:
         session_sound_file = args.session_sound_file
-    if args.break_sound_file:
+    if args.break_sound_file is not None:
         break_sound_file = args.break_sound_file
-    if args.silent:
+    if args.silent is not None:
         enable_sound = False
-    if args.no_break:
+    if args.no_break is not None:
         break_duration_in_seconds = 0
 
 def get_seconds_left():
@@ -246,7 +246,7 @@ def main():
     parser.add_argument('-n', '--no-break', action='store_true', help='No break sound.', dest='no_break')
 
     parser.add_argument('-i', '--interval', action='store', type=int, help='Update interval in seconds (default: 1).', metavar='DURATION', dest='update_interval_in_seconds')
-    parser.add_argument('-l', '--length', action='store', type=int, help='Bar length in characters (default: 10).', metavar='CHARACTERS', dest='total_number_of_marks')
+    parser.add_argument('-l', '--length', action='store', type=int, help='Bar length in characters (default: 10).', metavar='INT', dest='total_number_of_marks')
 
     parser.add_argument('-p', '--pomodoro', action='store', help='Pomodoro full mark characters (default: #).', metavar='CHARACTER', dest='session_full_mark_character')
     parser.add_argument('-b', '--break', action='store', help='Break full mark characters (default: |).', metavar='CHARACTER', dest='break_full_mark_character')

@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 # authors: Dat Chu <dattanchu@gmail.com>
 #          Dominik Mayer <dominik.mayer@gmail.com>
-# Prerequisite
+#          John Tyree
+# Optional Dependency
 #  - aplay to play a sound of your choice
 
 import time
@@ -12,6 +13,7 @@ import argparse
 import subprocess
 
 from datetime import timedelta
+from math import ceil, floor
 
 # ———————————————————————————— CONFIGURATIONS ————————————————————————————
 
@@ -32,7 +34,7 @@ empty_mark_character = '·'
 
 # Sound
 enable_sound = True
-session_sound_file_config = 'nokiaring.wav'
+session_sound_file_config = 'ding.mp3'
 break_sound_file_config = 'rimshot.wav'
 
 # —————————————————————————— END CONFIGURATIONS ———————————————————————————
@@ -46,7 +48,6 @@ break_sound_file = pymodoro_directory + '/' + break_sound_file_config
 last_start_time = 0
 
 def set_configuration_from_arguments(args):
-    #print(args)
     global session_duration_in_seconds
     global break_duration_in_seconds
     global update_interval_in_seconds
@@ -84,9 +85,9 @@ def set_configuration_from_arguments(args):
         session_sound_file = args.session_sound_file
     if args.break_sound_file is not None:
         break_sound_file = args.break_sound_file
-    if args.silent is not None:
+    if args.silent: # Always boolean
         enable_sound = False
-    if args.no_break is not None:
+    if args.no_break:
         break_duration_in_seconds = 0
 
 def get_seconds_left():
@@ -96,7 +97,7 @@ def get_seconds_left():
         if last_start_time != start_time:
             last_start_time = start_time
             setup_new_timer()
-        return session_duration_in_seconds - time.time() + start_time
+        return floor(session_duration_in_seconds - time.time() + start_time)
     else:
         return
 
@@ -117,7 +118,7 @@ def set_session_duration(session_duration_as_string):
     global session_duration_in_seconds
     session_duration_as_integer = convert_string_to_int(session_duration_as_string)
     if session_duration_as_integer != -1:
-        session_duration_in_seconds = session_duration_as_integer * 60
+        session_duration_in_seconds = session_duration_as_integer
 
 def convert_string_to_int(string):
     if not string.isdigit():
@@ -164,8 +165,8 @@ def get_output_seconds(seconds):
 
 def print_progress_bar(duration_in_seconds, seconds, full_mark_character):
     if total_number_of_marks != 0:
-        seconds_per_mark = (duration_in_seconds / total_number_of_marks)
-        number_of_full_marks = int(round(seconds / seconds_per_mark))
+        seconds_per_mark = ceil(float(duration_in_seconds) / total_number_of_marks)
+        number_of_full_marks = int(round(float(seconds) / seconds_per_mark))
         output = " " + print_full_marks(number_of_full_marks, full_mark_character) \
             + print_empty_marks(total_number_of_marks - number_of_full_marks)
     else:
@@ -208,21 +209,19 @@ def get_output_minutes(seconds):
 
 def play_sound(sound_file):
     if enable_sound:
-        os.system('aplay -q %s &' % sound_file)
+        try:
+            subprocess.Popen(['play', '-q', sound_file])
+        except OSError as e:
+            notify(["Error'd playing sound"])
+            pass
 
 def notify_end_of_session():
-    global play_sound_after_session
-    if play_sound_after_session:
-        play_sound_after_session = False
-        play_sound(session_sound_file)
-        notify(["Worked enough.", "Time for a break!"])
+    play_sound(session_sound_file)
+    notify(["Worked enough.", "Time for a break!"])
 
 def notify_end_of_break():
-    global play_sound_after_break
-    if play_sound_after_break:
-        play_sound_after_break = False
-        play_sound(break_sound_file)
-        notify(["Break is over.", "Back to work!"])
+    play_sound(break_sound_file)
+    notify(["Break is over.", "Back to work!"])
 
 def notify(strings):
     try:
@@ -233,13 +232,11 @@ def notify(strings):
 def main():
     # Parse command line arguments
     global session_file
-    global play_sound_after_session
-    global play_sound_after_break
 
-    parser = argparse.ArgumentParser(description='Create a Pomodoro display for a status bar.')
+    parser = argparse.ArgumentParser(description='Create a textual Pomodoro display.')
 
     parser.add_argument('-s', '--seconds', action='store_true', help='Changes format of input times from minutes to seconds.', dest='durations_in_seconds')
-    parser.add_argument('session_duration', action='store', nargs='?', type=int, help='Pomodoro duration in minutes (default: 25).', metavar='POMODORO DURATION')
+    parser.add_argument('-d', '--session', action='store', nargs='?', type=int, help='Pomodoro duration in minutes (default: 25).', metavar='POMODORO DURATION', dest="session_duration")
     parser.add_argument('break_duration', action='store', nargs='?', type=int, help='Break duration in minutes (default: 5).', metavar='BREAK DURATION')
 
     parser.add_argument('-f', '--file', action='store', help='Pomodoro session file (default: ~/.pomodoro_session).', metavar='PATH', dest='session_file')
@@ -260,10 +257,6 @@ def main():
     set_configuration_from_arguments(args)
     session_file = os.path.expanduser(session_file)
 
-# variables to keep track of sound playing
-    play_sound_after_session = False
-    play_sound_after_break = False
-
 # sanity check
     if not os.path.exists(session_sound_file):
         print("Error: Cannot find sound file %s" % session_sound_file)
@@ -273,20 +266,21 @@ def main():
 # Repeat printing the status of our session
     seconds_left = get_seconds_left()
     while True:
-        if seconds_left == None:
+        if seconds_left is None:
             sys.stdout.write("P —\n")
-        elif 0 < seconds_left:
-            print_session_output(seconds_left)
-            play_sound_after_session = True
-        elif -break_duration_in_seconds <= seconds_left < 0:
-            notify_end_of_session()
-            print_break_output(seconds_left)
-            if break_duration_in_seconds != 0:
-                play_sound_after_break = True
         else:
-            notify_end_of_session() # Needed in case break duration = 0
-            notify_end_of_break()
-            print_break_output_hours(seconds_left)
+            if 0 < seconds_left:
+                print_session_output(seconds_left)
+            elif seconds_left == 0:
+                notify_end_of_session()
+            else:
+                if -seconds_left < break_duration_in_seconds:
+                    print_break_output(seconds_left)
+                elif -seconds_left == break_duration_in_seconds:
+                    print_break_output(seconds_left)
+                    notify_end_of_break()
+                else:
+                    print_break_output_hours(seconds_left)
 
         sys.stdout.flush()
 

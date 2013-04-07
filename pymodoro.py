@@ -12,7 +12,6 @@ import sys
 import argparse
 import subprocess
 
-from datetime import timedelta
 from math import ceil, floor
 
 # ———————————————————————————— CONFIGURATIONS ————————————————————————————

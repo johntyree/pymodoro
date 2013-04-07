@@ -33,7 +33,7 @@ empty_mark_character = '·'
 
 # Sound
 enable_sound = True
-session_sound_file_config = 'ding.mp3'
+session_sound_file_config = 'dings.ogg'
 break_sound_file_config = 'rimshot.wav'
 
 # —————————————————————————— END CONFIGURATIONS ———————————————————————————

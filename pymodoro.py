@@ -210,7 +210,7 @@ def play_sound(sound_file):
     if enable_sound:
         try:
             subprocess.Popen(['play', '-q', sound_file])
-        except OSError as e:
+        except OSError:
             notify(["Error'd playing sound"])
             pass
 
@@ -225,7 +225,7 @@ def notify_end_of_break():
 def notify(strings):
     try:
         subprocess.Popen(['notify-send'] + strings)
-    except OSError as e:
+    except OSError:
         pass
 
 def main():

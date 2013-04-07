@@ -17,7 +17,7 @@ from math import ceil, floor
 # ———————————————————————————— CONFIGURATIONS ————————————————————————————
 
 # Files and Folders
-pymodoro_directory_config = '~/.pymodoro'
+pymodoro_directory_config = os.path.dirname(__file__)
 session_file = '~/.pomodoro_session'
 
 # Times
@@ -30,11 +30,20 @@ total_number_of_marks = 10
 session_full_mark_character = '#'
 break_full_mark_character = '|'
 empty_mark_character = '·'
+left_to_right = False
+
+# Prefixes
+break_prefix = 'B'
+break_suffix = ''
+pomodoro_prefix = 'P'
+pomodoro_suffix = ''
 
 # Sound
 enable_sound = True
+enable_tick_sound = False
 session_sound_file_config = 'dings.ogg'
 break_sound_file_config = 'rimshot.wav'
+tick_sound_file_config = 'klack.wav'
 
 # —————————————————————————— END CONFIGURATIONS ———————————————————————————
 
@@ -42,6 +51,7 @@ break_sound_file_config = 'rimshot.wav'
 pymodoro_directory = os.path.expanduser(pymodoro_directory_config)
 session_sound_file = pymodoro_directory + '/' + session_sound_file_config
 break_sound_file = pymodoro_directory + '/' + break_sound_file_config
+tick_sound_file = pymodoro_directory + '/' + tick_sound_file_config
 
 # variables
 last_start_time = 0
@@ -57,7 +67,15 @@ def set_configuration_from_arguments(args):
     global session_file
     global session_sound_file
     global break_sound_file
+    global tick_sound_file
     global enable_sound
+    global enable_tick_sound
+    global left_to_right
+    global break_prefix
+    global break_suffix
+    global pomodoro_prefix
+    global pomodoro_suffix
+
     if args.session_duration is not None:
         if args.durations_in_seconds == True:
             session_duration_in_seconds = args.session_duration
@@ -84,10 +102,24 @@ def set_configuration_from_arguments(args):
         session_sound_file = args.session_sound_file
     if args.break_sound_file is not None:
         break_sound_file = args.break_sound_file
+    if args.tick_sound_file:
+        tick_sound_file = args.tick_sound_file
     if args.silent: # Always boolean
         enable_sound = False
+    if args.tick:
+        enable_tick_sound = True
+    if args.left_to_right:
+        left_to_right = True
     if args.no_break:
         break_duration_in_seconds = 0
+    if args.break_prefix:
+        break_prefix = args.break_prefix
+    if args.break_suffix:
+        break_suffix = args.break_suffix
+    if args.pomodoro_prefix:
+        pomodoro_prefix = args.pomodoro_prefix
+    if args.pomodoro_suffix:
+        pomodoro_suffix = args.pomodoro_suffix
 
 def get_seconds_left():
     if os.path.exists(session_file):
@@ -133,16 +165,16 @@ def set_break_duration(break_duration_as_string):
         break_duration_in_seconds = break_duration_as_integer * 60
 
 def print_session_output(seconds_left):
-    print_output("P", session_duration_in_seconds, seconds_left, session_full_mark_character)
+    print_output(pomodoro_prefix, session_duration_in_seconds, seconds_left, session_full_mark_character, pomodoro_suffix)
 
 def print_break_output(seconds_left):
     break_seconds_left = get_break_seconds_left(seconds_left)
-    print_output("B", break_duration_in_seconds, break_seconds_left, break_full_mark_character)
+    print_output(break_prefix, break_duration_in_seconds, break_seconds_left, break_full_mark_character, break_suffix)
 
 def get_break_seconds_left(seconds):
     return break_duration_in_seconds + seconds
 
-def print_output(description, duration_in_seconds, seconds, full_mark_character):
+def print_output(description, duration_in_seconds, seconds, full_mark_character, suffix):
     minutes = get_minutes(seconds)
     output_seconds = get_output_seconds(seconds)
     progress_bar = print_progress_bar(duration_in_seconds, seconds, full_mark_character)
@@ -164,8 +196,11 @@ def get_output_seconds(seconds):
 
 def print_progress_bar(duration_in_seconds, seconds, full_mark_character):
     if total_number_of_marks != 0:
-        seconds_per_mark = ceil(float(duration_in_seconds) / total_number_of_marks)
-        number_of_full_marks = int(round(float(seconds) / seconds_per_mark))
+        seconds_per_mark = (duration_in_seconds / total_number_of_marks)
+        number_of_full_marks = int(round(seconds / seconds_per_mark))
+        # Reverse the display order
+        if left_to_right:
+            number_of_full_marks = total_number_of_marks - number_of_full_marks
         output = " " + print_full_marks(number_of_full_marks, full_mark_character) \
             + print_empty_marks(total_number_of_marks - number_of_full_marks)
     else:
@@ -231,6 +266,12 @@ def notify(strings):
 def main():
     # Parse command line arguments
     global session_file
+    global play_sound_after_session
+    global play_sound_after_break
+    global tick_sound_file
+    global enable_tick_sound
+    global pomodoro_prefix
+    global pomodoro_suffix
 
     parser = argparse.ArgumentParser(description='Create a textual Pomodoro display.')
 
@@ -250,7 +291,14 @@ def main():
 
     parser.add_argument('-sp', '--pomodoro-sound', action='store', help='Pomodoro end sound file (default: nokiaring.wav).', metavar='PATH', dest='session_sound_file')
     parser.add_argument('-sb', '--break-sound', action='store', help='Break end sound file (default: rimshot.wav).', metavar='PATH', dest='break_sound_file')
+    parser.add_argument('-st', '--tick-sound', action='store', help='Ticking sound file (default: klack.wav).', metavar='PATH', dest='tick_sound_file')
     parser.add_argument('-si', '--silent', action='store_true', help='Play no end sounds', dest='silent')
+    parser.add_argument('-t', '--tick', action='store_true', help='Play tick sound at every interval', dest='tick')
+    parser.add_argument('-ltr', '--left-to-right', action='store_true', help='Display markers from left to right (incrementing marker instead of decrementing)', dest='left_to_right')
+    parser.add_argument('-bp', '--break-prefix', action='store', help='String to display before, when we are in a break. Default to "B". Can be used to format display for dzen.', metavar='BREAK PREFIX', dest='break_prefix')
+    parser.add_argument('-bs', '--break-suffix', action='store', help='String to display after, when we are in a break. Default to "". Can be used to format display for dzen.', metavar='BREAK SUFFIX', dest='break_suffix')
+    parser.add_argument('-pp', '--pomodoro-prefix', action='store', help='String to display before, when we are in a pomodoro. Default to "B". Can be used to format display for dzen.', metavar='POMODORO PREFIX', dest='pomodoro_prefix')
+    parser.add_argument('-ps', '--pomodoro-suffix', action='store', help='String to display after, when we are in a pomodoro. Default to "". Can be used to format display for dzen.', metavar='POMODORO SUFFIX', dest='pomodoro_suffix')
 
     args = parser.parse_args()
     set_configuration_from_arguments(args)
@@ -261,12 +309,24 @@ def main():
         print("Error: Cannot find sound file %s" % session_sound_file)
     if not os.path.exists(break_sound_file):
         print("Error: Cannot find sound file %s" % break_sound_file)
+    if not os.path.exists(tick_sound_file):
+        print("Error: Cannot find sound file %s" % tick_sound_file)
 
 # Repeat printing the status of our session
     seconds_left = get_seconds_left()
     while True:
         if seconds_left is None:
-            sys.stdout.write("P —\n")
+            sys.stdout.write("%s —%s\n" % (pomodoro_prefix, pomodoro_suffix))
+        elif 0 < seconds_left:
+            print_session_output(seconds_left)
+            play_sound_after_session = True
+            if enable_tick_sound:
+                play_sound(tick_sound_file)
+        elif -break_duration_in_seconds <= seconds_left < 0:
+            notify_end_of_session()
+            print_break_output(seconds_left)
+            if break_duration_in_seconds != 0:
+                play_sound_after_break = True
         else:
             if 0 < seconds_left:
                 print_session_output(seconds_left)

@@ -280,29 +280,43 @@ def get_output_minutes(seconds):
 
 
 def play_sound(sound_file):
-    if enable_sound:
+    if enable_sound and sound_file:
         try:
             subprocess.Popen(['play', '-q', sound_file])
         except OSError:
-            notify(["Error'd playing sound"])
-            pass
+            try:
+                subprocess.Popen(['mplayer', sound_file])
+            except OSError:
+                notify(["Error'd playing sound"])
 
 
 def notify_end_of_session():
-    play_sound(session_sound_file)
-    notify(["Worked enough.", "Time for a break!"])
+    notify(["Worked enough.", "Time for a break!"], audio=session_sound_file)
 
 
 def notify_end_of_break():
-    play_sound(break_sound_file)
-    notify(["Break is over.", "Back to work!"])
+    notify(["Break is over.", "Back to work!"], audio=break_sound_file)
 
 
-def notify(strings):
+def notify(strings, audio=None):
     try:
-        subprocess.Popen(['notify-send'] + strings)
+        cmd = ['notify-send'] + strings
+        subprocess.Popen(cmd)
+        play_sound(audio)
     except OSError:
-        pass
+        title = ['-title', 'Pomodoro']
+        message = subtitle = []
+        try:
+            message = ['-message', strings.pop(0)]
+            subtitle = ['-subtitle', strings.pop(0)]
+        except IndexError:
+            pass
+        cmd = ['terminal-notifier'] + title + message + subtitle
+        try:
+            subprocess.Popen(cmd)
+            play_sound(audio)
+        except OSError:
+            pass
 
 
 def main():

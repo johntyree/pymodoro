@@ -17,8 +17,8 @@ from math import ceil, floor
 # ———————————————————————————— CONFIGURATIONS ————————————————————————————
 
 # Files and Folders
-pymodoro_directory_config = os.path.dirname(__file__)
-session_file = '~/.pomodoro_session'
+pymodoro_directory = os.path.expanduser(os.path.dirname(__file__))
+session_file = os.path.expanduser('~/.pomodoro_session')
 
 # Times
 session_duration_in_seconds = 25 * 60 +1
@@ -48,10 +48,12 @@ tick_sound_file_config = 'klack.wav'
 # —————————————————————————— END CONFIGURATIONS ———————————————————————————
 
 # constant inferred from configurations
-pymodoro_directory = os.path.expanduser(pymodoro_directory_config)
-session_sound_file = pymodoro_directory + '/' + session_sound_file_config
-break_sound_file = pymodoro_directory + '/' + break_sound_file_config
-tick_sound_file = pymodoro_directory + '/' + tick_sound_file_config
+session_sound_file = os.path.join(pymodoro_directory,
+                                  session_sound_file_config)
+break_sound_file = os.path.join(pymodoro_directory,
+                                break_sound_file_config)
+tick_sound_file = os.path.join(pymodoro_directory,
+                               tick_sound_file_config)
 
 # variables
 last_start_time = 0

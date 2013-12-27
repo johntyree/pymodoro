@@ -298,25 +298,28 @@ def notify_end_of_break():
     notify(["Break is over.", "Back to work!"], audio=break_sound_file)
 
 
-def notify(strings, audio=None):
+def notify(data, audio=None):
+    strings = list(data)
     try:
         cmd = ['notify-send'] + strings
         subprocess.Popen(cmd)
         play_sound(audio)
-    except OSError:
+    except OSError as e:
         title = ['-title', 'Pomodoro']
-        message = subtitle = []
+        message = subtitle = execute = []
         try:
             message = ['-message', strings.pop(0)]
+            if message[1].startswith("Break is over."):
+                execute = ['-execute', 'touch {}'.format(session_file)]
             subtitle = ['-subtitle', strings.pop(0)]
         except IndexError:
             pass
-        cmd = ['terminal-notifier'] + title + message + subtitle
+        cmd = ['terminal-notifier'] + title + message + subtitle + execute
         try:
             subprocess.Popen(cmd)
             play_sound(audio)
-        except OSError:
-            pass
+        except OSError as e:
+            print "Unable to notify {}".format(e)
 
 
 def main():

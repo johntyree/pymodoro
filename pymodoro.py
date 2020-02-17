@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # authors: Dat Chu <dattanchu@gmail.com>
 #          Dominik Mayer <dominik.mayer@gmail.com>
@@ -319,7 +319,7 @@ def notify(data, audio=None):
             subprocess.Popen(cmd)
             play_sound(audio)
         except OSError as e:
-            print "Unable to notify {}".format(e)
+            print("Unable to notify {}".format(e))
 
 
 def main():

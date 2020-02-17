@@ -5,7 +5,7 @@ PID=$(pgrep -f "pymodoro.py")
 if [[ $PID ]]; then
     kill $PID
 else
-    touch $HOME/.pomodoro_session
-    pymodoro.py -l 0 > $HOME/.pymodoro/fifo
-    echo ' ' > $HOME/.pymodoro/fifo
+    touch $HOME/.config/pymodoro/.pomodoro_session
+    pymodoro.py -l 0 > $HOME/.config/pymodoro/fifo
+    echo ' ' > $HOME/.config/pymodoro/fifo
 fi

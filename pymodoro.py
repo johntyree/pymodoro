@@ -18,7 +18,7 @@ from math import floor
 
 # Files and Folders
 pymodoro_directory = os.path.expanduser(os.path.dirname(__file__))
-session_file = os.path.expanduser('~/.pomodoro_session')
+session_file = os.path.expanduser('~/.config/pymodoro/pomodoro_session')
 
 # Times
 session_duration_in_seconds = 25 * 60 + 1
@@ -349,7 +349,7 @@ def main():
         metavar='BREAK DURATION')
     parser.add_argument(
         '-f', '--file', action='store',
-        help='Pomodoro session file (default: ~/.pomodoro_session).',
+        help='Pomodoro session file (default: ~/.config/pymodoro/pomodoro_session).',
         metavar='PATH', dest='session_file')
     parser.add_argument(
         '-n', '--no-break', action='store_true',

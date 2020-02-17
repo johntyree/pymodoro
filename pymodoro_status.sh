@@ -3,6 +3,7 @@
 PID=$(pgrep -f "pymodoro.py")
 
 if [[ $PID ]]; then
+    echo "Killing existing pymodoro process: $PID"
     kill $PID
 else
     touch $HOME/.config/pymodoro/.pomodoro_session

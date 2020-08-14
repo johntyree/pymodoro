@@ -8,7 +8,7 @@ if [[ ! -p $HOME/.config/pymodoro/fifo ]]; then
     mkfifo $HOME/.config/pymodoro/fifo
 fi
 
-PID=$(pgrep -f "pymodoro.py")
+PID=$(pgrep -f "python.*pymodoro.py")
 
 if [[ $PID ]]; then
     echo "Killing existing pymodoro process: $PID"

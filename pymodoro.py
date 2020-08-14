@@ -325,8 +325,8 @@ def notify(data, audio=None):
 def main():
     # Parse command line arguments
     global session_file
-    global play_sound_after_session
-    global play_sound_after_break
+    global notify_after_session
+    global notify_after_break
     global tick_sound_file
     global enable_tick_sound
     global pomodoro_prefix
@@ -434,32 +434,34 @@ def main():
 
 # Repeat printing the status of our session
     seconds_left = get_seconds_left()
+    notify_after_session = True
+    notify_after_break = break_duration_in_seconds != 0
     while True:
         if seconds_left is None:
+            # No session is active
             sys.stdout.write("%s —%s\n" % (pomodoro_prefix, pomodoro_suffix))
         elif 0 < seconds_left:
+            # We're counting down to the end of work session
             print_session_output(seconds_left)
-            play_sound_after_session = True
+            notify_after_session = True
             if enable_tick_sound:
                 play_sound(tick_sound_file)
-        elif -break_duration_in_seconds <= seconds_left < 0:
-            notify_end_of_session()
-            print_break_output(seconds_left)
-            if break_duration_in_seconds != 0:
-                play_sound_after_break = True
-        else:
-            if 0 < seconds_left:
-                print_session_output(seconds_left)
-            elif seconds_left == 0:
+        elif -break_duration_in_seconds <= seconds_left <= 0:
+            # We're counting down to the end of break
+            if notify_after_session:
                 notify_end_of_session()
+                notify_after_session = False
+            print_break_output(seconds_left)
+            notify_after_break = break_duration_in_seconds != 0
+        else:
+            if -seconds_left <= break_duration_in_seconds:
+                print_break_output(seconds_left)
             else:
-                if -seconds_left < break_duration_in_seconds:
-                    print_break_output(seconds_left)
-                elif -seconds_left == break_duration_in_seconds:
-                    print_break_output(seconds_left)
+                # Break has ended
+                print_break_output_hours(seconds_left)
+                if notify_after_break:
                     notify_end_of_break()
-                else:
-                    print_break_output_hours(seconds_left)
+                    notify_after_break = False
 
         sys.stdout.flush()
 

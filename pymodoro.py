@@ -19,6 +19,8 @@ from math import floor
 # Files and Folders
 pymodoro_directory = os.path.expanduser(os.path.dirname(__file__))
 session_file = os.path.expanduser('~/.config/pymodoro/pomodoro_session')
+start_script = os.path.expanduser('~/.local/bin/focus_time_start.sh')
+stop_script = os.path.expanduser('~/.local/bin/focus_time_stop.sh')
 
 # Times
 session_duration_in_seconds = 25 * 60 + 1
@@ -291,35 +293,27 @@ def play_sound(sound_file):
 
 
 def notify_end_of_session():
-    notify(["Worked enough.", "Time for a break!"], audio=session_sound_file)
+    notify(["-i", "face-tired", "Worked enough.", "Time for a break!"],
+           audio=session_sound_file,
+           script=stop_script)
 
 
 def notify_end_of_break():
-    notify(["Break is over.", "Back to work!"], audio=break_sound_file)
+    notify(["-i", "face-glasses", "Break is over.", "Back to work!"],
+           audio=break_sound_file,
+           script=start_script)
 
 
-def notify(data, audio=None):
+def notify(data, audio=None, script=None):
     strings = list(data)
+    cmd = ['notify-send'] + strings
     try:
-        cmd = ['notify-send'] + strings
         subprocess.Popen(cmd)
         play_sound(audio)
+        if script is not None:
+            subprocess.call([script])
     except OSError as e:
-        title = ['-title', 'Pomodoro']
-        message = subtitle = execute = []
-        try:
-            message = ['-message', strings.pop(0)]
-            if message[1].startswith("Break is over."):
-                execute = ['-execute', 'touch {}'.format(session_file)]
-            subtitle = ['-subtitle', strings.pop(0)]
-        except IndexError:
-            pass
-        cmd = ['terminal-notifier'] + title + message + subtitle + execute
-        try:
-            subprocess.Popen(cmd)
-            play_sound(audio)
-        except OSError as e:
-            print("Unable to notify {}".format(e))
+        print("Unable to notify {}".format(e))
 
 
 def main():

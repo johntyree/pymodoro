@@ -6,11 +6,11 @@
 # Optional Dependency
 #  - aplay to play a sound of your choice
 
-import time
-import os
-import sys
 import argparse
+import os
 import subprocess
+import sys
+import time
 
 from math import floor
 
@@ -145,6 +145,10 @@ def setup_new_timer():
         set_session_duration(options[0])
     if len(options) > 1:
         set_break_duration(options[1])
+    try:
+        subprocess.call([start_script])
+    except OSError as e:
+        print("Unable to run start script {}".format(e))
 
 
 def read_session_file():
